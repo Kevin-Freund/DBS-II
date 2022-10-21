@@ -1,5 +1,9 @@
 --Neues Semester (3. Semester/DBS II)
---Prak 1
+
+
+
+--MEILENSTEIN 1
+
 --Aufgabe 2)
 --a)
 Select LEFT (KunPLZ, 2) from Kunde Group by LEFT (KunPLZ, 2)
@@ -65,3 +69,63 @@ Join Mitarbeiter m on m.NLNr = g.NLNr
 Where a.MitID is null
 
 Select * from neueAufträge
+
+
+
+--MEILENSTEIN 2
+
+--Aufgabe 4
+CREATE TABLE artikel (
+ aid INT PRIMARY KEY,
+ bezeichnung VARCHAR(30),
+ bestand INT CHECK (bestand>=0),
+ preis DECIMAL(10,2) CHECK (preis>=0)
+)
+INSERT INTO artikel VALUES(111, 'Stuhl', 1200, 23.60)
+INSERT INTO artikel VALUES(112, 'Sofa', 100, 223.60)
+INSERT INTO artikel VALUES(113, 'Sessel', 66, 123.60)
+INSERT INTO artikel VALUES(115, 'Tisch', 20, 20.00)
+INSERT INTO artikel VALUES(117, 'Regal', 12, 3.99)
+
+--4. a)
+Begin Transaction T4 
+	Update artikel set bezeichnung = 'Couch' where bezeichnung = 'Sofa'
+	Select * from artikel
+	rollback
+Select * from artikel
+
+--4. b)
+Begin Transaction T4 
+	Update artikel set bezeichnung = 'Couch' where bezeichnung = 'Sofa'
+	Select * from artikel
+commit Transaction T4
+Select * from artikel
+
+--4. c)
+Begin Transaction T4c
+	Declare @menge_sessel Int; 
+	Set @menge_sessel = 10;
+	Declare @menge_tisch INT;
+	Set @menge_tisch = 25;
+	Update artikel set bestand -= @menge_sessel where bezeichnung = 'sessel'
+	Update artikel set bestand -= @menge_tisch where bezeichnung ='tisch'
+	Select * from artikel
+	rollback
+--diese Art der Semantik ist nicht sinnvoll, da hier direkt davon ausgegangen wird, dass die Bestellung möglich sei/alles auf Bestand sei
+--ohne dies vorher abzufragen.
+--So funkioniert bspw. die Bestellung von 25 Tischen nicht, siehe Fehlermeldung
+
+--4. d)
+Begin Transaction T4d
+	Declare @menge_stuhl Int;
+	Set @menge_stuhl = 500;
+	Declare @summe Int;
+	Update artikel set bestand += @menge_stuhl where bezeichnung ='stuhl'
+	Set @summe = (Select Sum(bestand) from artikel);
+	if(@summe > 2000)
+		rollback
+	else
+		commit
+
+Select Sum(bestand) from artikel
+Update artikel set bestand -= 500 where bezeichnung ='stuhl'
