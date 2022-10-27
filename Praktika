@@ -1,9 +1,274 @@
+
+--Aufgabe 1.1 Tabellenerstellung
+CREATE TABLE Mitarbeiter (
+	MitID char(3) PRIMARY KEY Not Null,
+	MitName varchar(20) Not Null,
+	MitVorname varchar(20) Null,
+	MitGebDat Date Not Null,
+	MitJob varchar(20) Not Null,
+	MitStundensatz smallmoney Null,
+	MitEinsatzort varchar(20) Null
+)
+
+Create Table Kunde (
+	KunNr Int PRIMARY KEY Not Null,
+	KunName varchar(20) Not Null,
+	KunOrt varchar(20) Not Null,
+	KunPLZ char(5) Not Null,
+	KunStrasse varchar(20) Not Null
+)
+
+Create Table Ersatzteil (
+	EtID char(5) Primary Key Not Null,
+	EtBezeichnung varchar(100) Not Null,
+	EtPreis smallmoney Not Null,
+	EtAnzLager Int Not Null,
+	EtHersteller varchar(30) Not Null
+)
+
+--Aufgabe 1.2 Import der Daten
+INSERT INTO Mitarbeiter SELECT * FROM trommelhelden..quelleMitarbeiter
+INSERT INTO Kunde SELECT * FROM trommelhelden..quelleKunde
+INSERT INTO Ersatzteil SELECT * FROM trommelhelden..quelleErsatzteil
+
+--Aufgabe 1.3 Kopie von Tabellen
+SELECT * INTO Auftrag FROM trommelhelden..quelleAuftrag
+SELECT * INTO Montage FROM trommelhelden..quelleMontage
+
+--Aufgabe 1.4 Ändern von Schlüsseln
+Alter Table Auftrag Add Primary Key (AufNr);
+Alter Table Auftrag Add Foreign Key (MitID) References Mitarbeiter(MitID);
+Alter Table Auftrag Add Foreign Key (KunNr) References Kunde(KunNr);
+
+Alter Table Montage Add Primary Key (EtID, AufNr);
+Alter Table Montage Add Foreign Key (EtID) References Ersatzteil(EtID);
+Alter Table Montage Add Foreign Key (AufNr) References Auftrag(AufNr);
+
+
+Select * From Auftrag
+
+--Aufgabe 1.5 
+--Rechtsklick, Design
+
+--Aufgabe 1.6 Datensätze zählen
+Select Count(*) From Auftrag;
+
+
+--Aufgabe 2.1
+--a)
+SELECT Count(*) FROM Kunde WHERE KunOrt = 'Radebeul'
+SELECT * FROM Kunde WHERE KunOrt = 'Radebeul'
+
+--b)
+SELECT * FROM Kunde WHERE KunOrt NOT LIKE 'Chemnitz' 
+
+--c)
+Select * From Ersatzteil Where EtBezeichnung Like 'S%'
+
+--d)
+Select * From Auftrag Where Anfahrt > 80 Or between 2 and 3
+
+--e)
+Select MitName, MitVorname, MitJob from Mitarbeiter Where MitEinsatzort = 'Radebeul' Order by MitName 
+
+--f)
+Select Count(*) from Auftrag Where Dauer is Null
+
+--g)
+Select *, Format(Anfahrt*2.50, 'C') as Anfahrtskosten from Auftrag Where Anfahrt is not null
+
+--h)
+SELECT EtPreis*EtAnzLager AS Warenbestand_in_Euro FROM Ersatzteil
+
+
+--Aufgabe 2.2 
+--a)
+Select MitName, MitVorname, MitGebDat, 
+Case when DateAdd(year, DateDiff(year, MitGebDat, GetDate()), MitGebDat) > GetDate() then DateDiff(Year, MitGebDat, GetDate()) - 1 
+else DateDiff(Year, MitGebDat, Getdate()) end as MitAlter 
+from Mitarbeiter
+--b)
+Select avg(DateDiff(day, AufDat, ErlDat)) as durchschnittliche_Frist from Auftrag where month(ErlDat) = month(GetDate()) and year(ErlDat) = year(GetDate())
+--c)
+Select Aufnr, Case when Dauer is Null then 0 else Dauer end as Auftragsdauer from Auftrag
+Select Aufnr, isnull(Dauer, 0) from Auftrag
+
+
+--Aufgabe 2.3
+--a)
+Select count(*) from Kunde
+--b)
+Select Count(*), KunOrt from Kunde group by KunOrt
+--c)
+Select avg(Dauer) as Durchschnitt, MitID from Auftrag where Dauer is not null group by MitID 
+--d) 
+Select (Min(Dauer)+Max(Dauer)/2) as Durchschnitt_Min_Max, MitID from Auftrag where Dauer is not null group by MitID 
+--e)
+Select avg(Dauer) as Durchschnitt, MItID, ErlDat, (count(AufNr)) as Auftraege from Auftrag Where MitID is not Null and Dauer is not Null Group By MitID, ErlDat;
+--f)
+Select Min(ErlDat) as geplante_Erledigung from Auftrag where Dauer is null 
+
+
+--Aufgabe 2.4
+--a)
+SELECT MitJob, avg(datediff(year,MitGebDat, getdate())) AS Durchschnittsalter FROM Mitarbeiter GROUP BY MitJob; 
+--b) 
+Select MitID, avg(Dauer) as durchschnittliche_Dauer, (datename(weekday,ErlDat)) as Wochentag from Auftrag where MitID is not NULL group by MitId, (datename(weekday,ErlDat));
+
+
+--Aufgabe 2.5
+--a)
+--Where
+SELECT AufNr, EtBezeichnung, Anzahl, EtPreis, Anzahl*EtPreis as Ersatzteilkosten FROM Montage m, Ersatzteil e WHERE m.EtID = e.EtID ORDER BY AufNr;    
+--Join
+SELECT AufNr, EtBezeichnung, Anzahl, EtPreis, Anzahl*EtPreis as Ersatzteilkosten FROM Montage m Join Ersatzteil e on m.EtID = e.EtID ORDER BY AufNr;  
+--b)
+Select AufNr, m.MitID, m.MitStundensatz, a.Dauer, m.MitStundensatz * Cast(a.Dauer as smallmoney) as Lohnkosten from Auftrag a Join Mitarbeiter m on a.MitID = m.MitID Where Dauer is not Null
+--c)
+Select KunName, KunOrt, Anfahrt from Kunde k Join Auftrag a on k.KunNr = a.KunNr Where Anfahrt > 50 Order by Anfahrt
+--d)
+Select KunName, a.AufNr, ErlDat, e.EtID 
+from Kunde k Join Auftrag a on k.KunNr = a.KunNr Join Montage m on a.AufNr = m.AufNr Join Ersatzteil e on e.EtID = m.EtID 
+Where  e.EtID = 'H0230' 
+And DateDiff(month, ErlDat, GetDate()) < 3 
+And Dauer is not Null 
+--e)
+Select a.AufNr, Anzahl*EtPreis as Materialkosten, MitStundensatz* Cast(a.Dauer as smallmoney) as Lohnkosten, a.Anfahrt*2.50 as Anfahrtskosten 
+from Auftrag a Join Mitarbeiter m on m.MitID = a.MitID Join Montage mt on a.AufNr = mt.AufNr Join Ersatzteil e on e.EtID = mt.EtID Where Anfahrt is not null
+--f)
+Select AufNr, Case when a.MitID is Null then 'nicht festgelegt' else m.MitName end as Mitarbeiter, AufDat from Auftrag a left Join Mitarbeiter m on a.MitID = m.MitID Where month(AufDat) = month(GetDate())
+Select * from Auftrag Where month(AufDat) = month(GetDate())
+--g)
+Select EtBezeichnung, m.EtID, Sum(Anzahl) as Gebrauch from Ersatzteil e Join Montage m on e.EtID = m.EtID Join Auftrag a on a.AufNr = m.AufNr Where month(AufDat) = month(GetDate()) group by EtBezeichnung, m.EtID
+
+
+--Aufgabe 2.6
+--a)
+Select m.MitID, m.MitName from Mitarbeiter m Where Not Exists (Select a.MitID from Auftrag a Where month(AufDat) = month(GetDate()) And a.MitID = m.MitID and year(AufDat) = year(GetDate()))
+--b)
+Select a.AufNr, m.MitStundensatz * Cast(a.Dauer as smallmoney) as Lohnkosten, (Anfahrt*2.50) as Fahrtkosten 
+from Auftrag a Join Mitarbeiter m on m.MitID = a.MitID 
+Where Dauer is not null and Not Exists (Select m.AufNr from Montage m Where a.AufNr = m.AufNr)
+--c)
+Select AufNr, AufDat from Auftrag Where AufDat = (Select Min(AufDat) from Auftrag Where Dauer is Null)
+--d)
+Select KunNr from Auftrag Where KunNr Not in (Select KunNr from Auftrag Where month(AufDat) != 3)
+--e)
+---Hier kommt noch was hin
+--korreliert
+Select MitID, a1.AufNr, Dauer from Auftrag a1 Where Dauer = (Select Max(Dauer) from Auftrag a2 Where a1.MitID = a2.MitID) Group by MitID, Dauer, a1.AufNr
+
+--unkorrelliert
+Select a1.MitID, a1.AufNr, a2.MaxDauer 
+from Auftrag a1, 
+	(Select MitID, Max(Dauer) as MaxDauer 
+	 from Auftrag where Dauer is not Null Group by MitID) as a2 
+Where a1.MitID=a2.MitID and a1.Dauer=a2.MaxDauer 
+Group by a1.MitID, a1.AufNr, a2.MaxDauer
+
+
+--Aufgabe 2.7
+--a)
+Select MitID, Sum(Anfahrt) as Gesamtfahrt from Auftrag Where month(ErlDat) = 4 Group by MitID Having Sum(Anfahrt) > 500
+--b)
+Select e.EtID, Sum(m.Anzahl) as verbraucht, Avg(e.EtAnzLager) as Bestand from Ersatzteil e Join Montage m on e.EtID = m.EtID Group by e.EtID Having Sum(m.Anzahl) < Avg(e.EtAnzLager)
+
+
+--Aufgabe 2.8
+--a)
+Select * from Kunde
+Insert into Kunde Values(1501, 'Simon', 'Dresden', '01234', 'Musterstraße 1')
+--b)
+Select * from Mitarbeiter
+Update Mitarbeiter Set MitStundensatz = 75 Where MitID IN (Select MitID from Mitarbeiter Where MitJob = 'Azubi')
+--c)
+Select * from Montage
+Delete from Montage Where EtID in (Select EtID from Ersatzteil Where EtHersteller = 'Mosch')
+Select * from Ersatzteil
+Delete from Ersatzteil Where EtHersteller = 'Mosch'
+--d) 
+Select * from Montage 
+Select * from Kunde
+Select * from Auftrag
+
+Select distinct KunNr into tempKun from Auftrag Where KunNr Not In (Select Distinct KunNr from Auftrag where month(AufDat) != 3 or Dauer is null)
+Delete from montage Where AufNr in (Select AufNr from Auftrag where month(erldat) = 3 and dauer is not null)
+Delete from Auftrag where month(erldat) = 3 and dauer is not null
+Delete from Kunde where KunNr in (Select KunNr from tempKun)
+Drop table tempKun
+
+
+--Aufgabe 2.9
+--a) Differenz
+Select * from Mitarbeiter
+Select KunOrt from Kunde except Select MitEinsatzort from Mitarbeiter
+--b) Durchschnitt
+Select KunOrt from Kunde intersect Select MitEinsatzort from Mitarbeiter
+--c) Vereinigung
+Select KunOrt from Kunde union Select MitEinsatzort from Mitarbeiter
+
+
+--Aufgabe 2.10
+Create View Auftragswert
+As
+Select a.AufNr, a.ErlDat, k.KunOrt, Cast(Anzahl as smallmoney) * EtPreis as Materialkosten, Cast(a.Anfahrt *2.50 as smallmoney) as Anfahrtskosten , MitStundensatz * Cast(a.Dauer as smallmoney) as Lohnkosten
+from Auftrag a 
+left Join Montage mt on a.AufNr = mt.AufNr 
+left Join Ersatzteil e on e.EtID = mt.EtID 
+Join Mitarbeiter m on m.MitID = a.MitID 
+Join Kunde k on a.KunNr = k.KunNr
+Where dauer is not null
+
+Select AufNr, (Materialkosten + Anfahrtskosten + Lohnkosten) as Gesamtkosten
+from Auftragswert
+
+
+
+--Aufgabe 2.11
+Select AufNr, Anfahrt,
+	Case 
+		When  (Anfahrt * 2.50) >= 30 then (Anfahrt * 2.50)
+	End	as Anfahrtskosten
+From Auftrag
+Where Anfahrt >= 12
+
+
+--Aufgabe 3.1
+--zum Prüfen
+Select KunNr, Count(KunNr) as Anzahl from Auftrag Where MitID = '103' Group by KunNr
+Select * from Auftrag
+--eigentliche Code
+Create Procedure MitarbeiterKunden(@MitID varchar(3))
+As
+	Select KunNr, Count(KunNr) as Häufigkeit
+	From Auftrag
+	Where MitID = @MitID
+	Group by KunNr
+Return
+Exec MitarbeiterKunden '103'
+
+Drop Procedure MitarbeiterKunden
+
+
+
+--Aufgabe 3.2
+--Zum Prüfen
+Select EtID, Sum(Anzahl) as Gesamt from Montage Group by EtID Having Sum(Anzahl) > 45
+Select EtID from Ersatzteil
+--eigentliche Code
+Create Procedure AnzahlVerarbeitetGrößer(@Parameter varchar(10))
+As
+	Select EtID, Sum(Anzahl) as Häufigkeit
+	From Montage
+	Group by EtID
+	Having Sum(Anzahl) > @Parameter
+Return
+Exec AnzahlVerarbeitetGrößer '45'
+
+
+
 --Neues Semester (3. Semester/DBS II)
-
-
-
---MEILENSTEIN 1
-
+--Prak 1
 --Aufgabe 2)
 --a)
 Select LEFT (KunPLZ, 2) from Kunde Group by LEFT (KunPLZ, 2)
@@ -71,7 +336,6 @@ Where a.MitID is null
 Select * from neueAufträge
 
 
-
 --MEILENSTEIN 2
 
 --Aufgabe 4
@@ -102,30 +366,57 @@ commit Transaction T4
 Select * from artikel
 
 --4. c)
-Begin Transaction T4c
-	Declare @menge_sessel Int; 
-	Set @menge_sessel = 10;
-	Declare @menge_tisch INT;
-	Set @menge_tisch = 25;
-	Update artikel set bestand -= @menge_sessel where bezeichnung = 'sessel'
-	Update artikel set bestand -= @menge_tisch where bezeichnung ='tisch'
-	Select * from artikel
-	rollback
---diese Art der Semantik ist nicht sinnvoll, da hier direkt davon ausgegangen wird, dass die Bestellung möglich sei/alles auf Bestand sei
---ohne dies vorher abzufragen.
---So funkioniert bspw. die Bestellung von 25 Tischen nicht, siehe Fehlermeldung
+--10 Artikel
+begin transaction 
+Select * from artikel
+Set XACT_ABORT on
+declare @menge_sessel int= 10
+declare @menge_tisch int= 10 
+Update artikel
+Set bestand -= @menge_sessel
+where bezeichnung = 'Sessel'
+Update artikel
+Set bestand -= @menge_tisch
+where bezeichnung = 'Tisch'
+select * from artikel
+rollback
+select * from artikel
+
+--25 Artiekl
+begin transaction 
+Select * from artikel
+Set XACT_ABORT on
+declare @menge_sessel2 int= 25
+declare @menge_tisch2 int= 25
+Update artikel
+Set bestand -= @menge_sessel2
+where bezeichnung = 'Sessel'
+Update artikel
+Set bestand -= @menge_tisch2
+where bezeichnung = 'Tisch'
+select * from artikel
+rollback
+select * from artikel
+
 
 --4. d)
 Begin Transaction T4d
 	Declare @menge_stuhl Int;
-	Set @menge_stuhl = 500;
+	Set @menge_stuhl = 1000;
 	Declare @summe Int;
 	Update artikel set bestand += @menge_stuhl where bezeichnung ='stuhl'
 	Set @summe = (Select Sum(bestand) from artikel);
 	if(@summe > 2000)
+	  Begin
+		Print 'Artikel > 2000'
 		rollback
+	  End
 	else
 		commit
 
 Select Sum(bestand) from artikel
 Update artikel set bestand -= 500 where bezeichnung ='stuhl'
+
+--Aufgabe 5
+
+--5. a)
