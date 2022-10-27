@@ -419,4 +419,66 @@ Update artikel set bestand -= 500 where bezeichnung ='stuhl'
 
 --Aufgabe 5
 
---5. a)
+--5.
+-- T1 
+SET TRANSACTION ISOLATION LEVEL 
+repeatable read
+ 
+BEGIN TRANSACTION 
+-- r1(A) 
+SELECT aid,preis FROM Artikel 
+WHERE aid=111 
+ 
+waitfor delay '00:00:10' 
+ 
+--w1(B) 
+UPDATE Artikel set bestand=500 
+WHERE aid = 113 
+COMMIT 
+
+--a)
+--Hier entsteht kein Deadlock, da das Read uncommitted nur kurze x-Sperren verwendet und damit das lesen bzw schreiben nicht beeinflusst wird
+--b
+--Hier entsteht kein Deadlock, da das Read Committed nur Lange x-Sperren und kurze sSperren verwendet und da nach dem Schreiben kein lesen mehr stattfindet
+--c) 
+--Hier entsteht ein Deadlock, weil eine Lange S-Sperre den Schreibvorgang beider objekte verhindert
+
+--d) 
+-- T1 
+SET TRANSACTION ISOLATION LEVEL 
+repeatable read
+ 
+BEGIN TRANSACTION 
+-- r1(A) 
+SELECT aid,preis FROM Artikel 
+WHERE aid=111 
+Select aid,preis from Artikel
+Where aid=112
+SELECT aid,preis FROM Artikel 
+WHERE aid=113 
+Select aid,preis from Artikel
+Where aid=114
+ 
+waitfor delay '00:00:10' 
+ 
+--w1(B) 
+UPDATE Artikel set bestand=500 
+WHERE aid = 113
+UPDATE Artikel set bestand=20 
+WHERE aid = 115
+COMMIT 
+
+--e)
+-- T2
+SET TRANSACTION ISOLATION LEVEL
+repeatable read
+set DEADLOCK_PRIORITY  high
+BEGIN TRANSACTION
+-- r2(B)
+SELECT aid,bestand FROM Artikel
+WHERE aid = 113
+waitfor delay '00:00:10'
+-- w2(A)
+UPDATE Artikel set preis=350
+WHERE aid=111
+COMMIT
