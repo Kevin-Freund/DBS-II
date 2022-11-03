@@ -482,3 +482,66 @@ waitfor delay '00:00:10'
 UPDATE Artikel set preis=350
 WHERE aid=111
 COMMIT
+
+
+--MEILENSTEIN 3
+
+--Aufgabe 1
+--Skalar
+Create function Anfahrtspreis(@Anfahrt int)
+Returns decimal(5,2)
+As
+	Begin
+	Declare @Anfahrtpreis decimal(5,2)
+	Set @Anfahrtpreis = 2.5 * @Anfahrt + 30
+	Return @Anfahrtpreis
+	End
+
+Select AufNr, Anfahrt, dbo.Anfahrtspreis(Anfahrt) as Anfahrtspreis from Auftrag Where Anfahrt is not null
+
+--Tabelle
+Create function MindestET (@Mindestbestand int)
+Returns @table Table
+( EtID char(5),
+  EtBezeichnung char(30),
+  EtAnzLager int
+)
+As
+Begin
+	Insert into @table
+	Select EtID, EtBezeichnung, EtAnzLager
+	From Ersatzteil
+	Where EtAnzLager < @Mindestbestand
+	Return
+End
+
+Declare @Mindest int
+Set @Mindest = 50
+Select EtID, EtBezeichnung, EtAnzLager From MindestET(@Mindest)
+
+
+--Aufgabe 2
+--Default
+Alter Table Mitarbeiter Add Constraint DF_Tätigkeit Default 'Monteur' For MitJob
+Select * from Mitarbeiter
+Insert into Mitarbeiter (MitID, MitName, MitVorname, MitGebDat, MitStundensatz, NLNr) Values (113, 'Pfund', 'Robert', GetDate(), 80, 1)
+
+Alter Table Auftrag Add Constraint DF_Eingang Default Getdate() For AufDat
+Select * from Auftrag
+Insert into Auftrag (Aufnr, MitID, KunNr) Values (13000, 113, 1501)
+Delete from Auftrag where Aufnr = 13000
+
+--Check
+Alter Table Auftrag Add Constraint CK_Datum Check (datediff(day, AufDat, ErlDat) >= 0)
+Select * from Auftrag
+
+Select * from Mitarbeiter
+Alter Table Mitarbeiter Add Constraint CK_MitID Check (MitID between 100 and 999)
+
+
+--Foreign Key
+--Löschen per Randleiste (Tables > Montage > Keys) //BAUSTELLE
+Alter table Montage add constraint fk_Aufnr foreign key (Aufnr) references Auftrag(Aufnr) on Delete Cascade
+Select * from Auftrag
+Select * from Montage
+Select Min(AufDat) from Auftrag Where month(AufDat)=5
