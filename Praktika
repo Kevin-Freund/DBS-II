@@ -540,8 +540,65 @@ Alter Table Mitarbeiter Add Constraint CK_MitID Check (MitID between 100 and 999
 
 
 --Foreign Key
---Löschen per Randleiste (Tables > Montage > Keys) //BAUSTELLE
+--Löschen per Randleiste (Tables > Montage > Keys) oder...
+Alter table Montage drop constraint <old key> 
+
 Alter table Montage add constraint fk_Aufnr foreign key (Aufnr) references Auftrag(Aufnr) on Delete Cascade
 Select * from Auftrag
 Select * from Montage
-Select Min(AufDat) from Auftrag Where month(AufDat)=5
+
+Delete from Auftrag Where month(AufDat) = 5 and day(AufDat) = (Select Min(day(AufDat)) from Auftrag Where month(AufDat)=5)
+
+
+
+--Aufgabe 3
+--3.1 Stundensatz
+Create Trigger StundensatzTrigger 
+On Mitarbeiter For Insert, Update as 
+If (Select Count(*) from Mitarbeiter where (MitJob = 'Monteur' or MitJob ='Meister') and MitStundensatz is null) > 0
+	Begin
+		Print 'Eingabe abgelehnt, bitte fügen Sie ein Stundensatz hinzu.'
+		Select * from Mitarbeiter where MitStundensatz is Null
+		Return
+		Rollback
+	End
+
+--a) funktioniert
+Insert into Mitarbeiter (MitID, MitName, MitVorname, MitGebDat, MitJob) Values (114, 'Pfefferkorn', 'Linus', GetDate(), 'Azubi')
+--b) funktioniert nicht (gewollt)
+Update Mitarbeiter set MitJob = 'Monteur' Where MitID = 114
+--c) funktioniert
+Update Mitarbeiter set MitJob = 'Monteur', MitStundensatz = 80 Where MitID = 114
+
+--3.2 Erledigte Aufträge
+Select * from Auftrag
+Create Trigger Abbuchung
+On Rechnung For Insert as
+If (Select Count(*) from inserted join Auftrag on inserted.aufnr = auftrag.aufnr Where  ErlDat is Null or Dauer is Null or Anfahrt is Null) > 0
+	Begin 
+		Raiserror('Abbuchung nicht möglich, es fehlen noch Angaben', 16, 10)
+		Select * from Auftrag Where ErlDat is Null or Dauer is Null or Anfahrt is Null
+		Rollback Transaction
+		Return
+	End
+If (Select Count(*) from Rechnung r Join Auftrag a on r.AufNr = a.AufNr Where 2.50 * a.Anfahrt > r.RechBetrag) > 0
+	Begin
+		Raiserror('Abbuchung nicht möglich, Anfahrtskosten sind größer als der Rechnungsbetrag', 16, 10)
+		Select * from Rechnung r Join Auftrag a on r.AufNr = a.AufNr Where 2.50 * a.Anfahrt > r.RechBetrag
+		Rollback Transaction
+		Return
+	End
+
+Drop Trigger Abbuchung
+
+--a)
+Select *, 2.50 * Anfahrt as Kosten from Auftrag Where Aufnr = 10164
+--2x fehlende Angaben
+Insert into Rechnung values(1281, 10026, '15.10.2022', 154.50)
+Insert into Rechnung values(1152, 10218, '15.10.2022', 180.00)
+Insert into Rechnung values(1213, 10164, '16.10.2022', 65.00)
+
+--b)
+INSERT INTO Rechnung SELECT KunNr, AufNr, Erldat, 180
+FROM Auftrag WHERE AufNr IN (10050,10052,10060)
+
