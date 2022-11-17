@@ -521,7 +521,7 @@ Select EtID, EtBezeichnung, EtAnzLager From MindestET(@Mindest)
 
 
 --Aufgabe 2
---Default
+--2.1 Default
 Alter Table Mitarbeiter Add Constraint DF_Tätigkeit Default 'Monteur' For MitJob
 Select * from Mitarbeiter
 Insert into Mitarbeiter (MitID, MitName, MitVorname, MitGebDat, MitStundensatz, NLNr) Values (113, 'Pfund', 'Robert', GetDate(), 80, 1)
@@ -531,7 +531,7 @@ Select * from Auftrag
 Insert into Auftrag (Aufnr, MitID, KunNr) Values (13000, 113, 1501)
 Delete from Auftrag where Aufnr = 13000
 
---Check
+--2.2 Check
 Alter Table Auftrag Add Constraint CK_Datum Check (datediff(day, AufDat, ErlDat) >= 0)
 Select * from Auftrag
 
@@ -539,7 +539,7 @@ Select * from Mitarbeiter
 Alter Table Mitarbeiter Add Constraint CK_MitID Check (MitID between 100 and 999)
 
 
---Foreign Key
+--2.3 Foreign Key
 --Löschen per Randleiste (Tables > Montage > Keys) oder...
 Alter table Montage drop constraint <old key> 
 
@@ -592,13 +592,90 @@ If (Select Count(*) from Rechnung r Join Auftrag a on r.AufNr = a.AufNr Where 2.
 Drop Trigger Abbuchung
 
 --a)
-Select *, 2.50 * Anfahrt as Kosten from Auftrag Where Aufnr = 10164
+Select * from Rechnung
+Select *, 2.50 * Anfahrt as Kosten from Auftrag Where Aufnr = 10050
 --2x fehlende Angaben
 Insert into Rechnung values(1281, 10026, '15.10.2022', 154.50)
 Insert into Rechnung values(1152, 10218, '15.10.2022', 180.00)
 Insert into Rechnung values(1213, 10164, '16.10.2022', 65.00)
 
 --b)
+--2/3 Anfahrt > Rechnung
 INSERT INTO Rechnung SELECT KunNr, AufNr, Erldat, 180
 FROM Auftrag WHERE AufNr IN (10050,10052,10060)
+--
+INSERT INTO rechnung SELECT kunnr, aufnr, erldat, 135  
+FROM auftrag WHERE aufnr IN (10056,10059,10061)  
+
+
+--3.3 Protokollierung
+--a)
+Alter table Auftrag alter column Beschreibung varchar(200)
+--b)
+Create Table Protokoll_Auftrag_Tabelle
+(AufNr int not Null,
+MitID char(3) Null,
+KunNr int not Null,
+AufDat date not Null,
+ErlDat date Null,
+Dauer decimal(5, 1) null,
+Anfahrt int null,
+Beschreibung varchar(200) null,
+Benutzer CHAR(20) NULL,
+Zeit DATETIME NULL,
+Änderung VARCHAR(100))
+
+Create Table Protokoll_Montage_Tabelle
+(EtID char(5) not Null,
+AufNr int not Null,
+Anzahl int not Null,
+Benutzer CHAR(20) Null,
+Zeit DATETIME Null,
+Änderung VARCHAR(100))
+--c)
+CREATE TRIGGER LöschProtokoll on Auftrag
+For Delete As
+	Begin 
+		Select * from Auftrag
+		Raiserror('Abbruch, Trigger funktioniert (Auftrag)', 16, 10)
+		Rollback
+	End
+
+CREATE TRIGGER LöschProtokoll_Montage on Montage
+For Delete As
+	Begin 
+		Select * from deleted
+		Raiserror('Abbruch, Trigger funktioniert (Montage)', 16, 10)
+		Rollback
+	End
+--e)
+Disable Trigger LöschProtokoll on Auftrag
+Disable Trigger LöschProtokoll_Montage on Montage
+
+Create Trigger Protokoll_Auftrag on Auftrag
+For Delete As
+	Begin
+		Insert into Protokoll_Auftrag_Tabelle 
+		Select *, SYSTEM_USER, Getdate(), 'delete'
+		From deleted
+	End
+
+Create Trigger Protokoll_Montage on Montage
+For Delete As
+	Begin
+		Insert into Protokoll_Montage_Tabelle 
+		Select *, SYSTEM_USER, Getdate(), 'delete'
+		From deleted
+	End
+
+Delete from Auftrag where AufDat = '2022-05-11'	
+Select * from Protokoll_Montage_Tabelle
+Select * from Protokoll_Auftrag_Tabelle 
+
+--f)
+Begin Transaction
+	Delete from Auftrag where month(ErlDat) = 5
+	Select * from Protokoll_Auftrag_Tabelle
+	Select * from Protokoll_Montage_Tabelle
+	Rollback
 
