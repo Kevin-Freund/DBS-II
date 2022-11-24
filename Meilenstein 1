@@ -1,0 +1,66 @@
+--PMeilenstein 1
+--Aufgabe 2)
+--a)
+Select LEFT (KunPLZ, 2) from Kunde Group by LEFT (KunPLZ, 2)
+
+--b)
+SELECT * INTO Niederlassung FROM trommelhelden..quelleNiederlassung
+Alter table Niederlassung add constraint pk_NLNr primary key (NLNr)
+
+SELECT * INTO Gebiet FROM trommelhelden..quelleGebiet
+Alter table Gebiet add constraint pk_Gebiet primary key (GebietID)
+Alter table Gebiet add constraint fk_NLNr foreign key (NLNr) references Niederlassung(NLNr)
+
+--c)
+Alter Table Mitarbeiter Add NLNr Int Default NULL;
+
+--d)
+UPDATE Mitarbeiter Set NLNr = (Select NLNr from Niederlassung where Mitarbeiter.MitEinsatzort = Ort)
+Select * from Mitarbeiter
+
+--e) 
+Alter Table Mitarbeiter Drop column MitEinsatzort
+Select * from Mitarbeiter
+
+--f)
+Alter table Mitarbeiter add foreign key (NLNr) references Niederlassung(NLNr)
+
+
+--Aufgabe 3)
+Select MItID, Ort from Mitarbeiter m Join Niederlassung n on n.NLNr = m.NLNr 
+Select MITID from Mitarbeiter m Join Niederlassung n on n.NLNr = m.NLNr Where Ort = 'Dresden'
+Select Ort from Niederlassung n Join Mitarbeiter m on m.NLNr = n.NLNr Where MitID = '106'
+
+
+--Aufgabe 4)
+Insert into Kunde Select * from trommelhelden..quelleKunde Where KunNr not in (Select KunNr from Kunde)
+
+INSERT INTO Auftrag SELECT * FROM trommelhelden..quelledbs2Auftrag
+INSERT INTO Montage SELECT * FROM trommelhelden..quelledbs2Montage
+
+Select Count(*) from Auftrag
+Select Count(*) from Montage
+
+
+--Aufgabe 5)
+create table Rechnung (
+	KunNr int not null,
+	AufNr int not null,
+	RechDat date not null,
+	RechBetrag smallmoney not null)
+
+Alter table Rechnung add foreign key (KunNr) references Kunde(KunNr)
+Alter table Rechnung add foreign key  (AufNr) references Auftrag(AufNr)
+Alter table Rechnung add primary key (KunNr, AufNr) 
+
+--Aufgabe 6)
+Create View neueAufträge
+As
+Select a.AufNr, a.KunNr, m.MitID 
+from Auftrag a 
+Join Kunde k on a.KunNr = k.KunNr
+Join Gebiet g on g.GebietID = Left(KunPLZ, 2)
+Join Mitarbeiter m on m.NLNr = g.NLNr
+Where a.MitID is null
+
+Select * from neueAufträge
