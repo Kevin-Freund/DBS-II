@@ -1,0 +1,146 @@
+--MEILENSTEIN 2
+
+--Aufgabe 4
+CREATE TABLE artikel (
+ aid INT PRIMARY KEY,
+ bezeichnung VARCHAR(30),
+ bestand INT CHECK (bestand>=0),
+ preis DECIMAL(10,2) CHECK (preis>=0)
+)
+INSERT INTO artikel VALUES(111, 'Stuhl', 1200, 23.60)
+INSERT INTO artikel VALUES(112, 'Sofa', 100, 223.60)
+INSERT INTO artikel VALUES(113, 'Sessel', 66, 123.60)
+INSERT INTO artikel VALUES(115, 'Tisch', 20, 20.00)
+INSERT INTO artikel VALUES(117, 'Regal', 12, 3.99)
+
+--4. a)
+Begin Transaction T4 
+	Update artikel set bezeichnung = 'Couch' where bezeichnung = 'Sofa'
+	Select * from artikel
+	rollback
+Select * from artikel
+
+--4. b)
+Begin Transaction T4 
+	Update artikel set bezeichnung = 'Couch' where bezeichnung = 'Sofa'
+	Select * from artikel
+commit Transaction T4
+Select * from artikel
+
+--4. c)
+--10 Artikel
+begin transaction 
+Select * from artikel
+Set XACT_ABORT on
+declare @menge_sessel int= 10
+declare @menge_tisch int= 10 
+Update artikel
+Set bestand -= @menge_sessel
+where bezeichnung = 'Sessel'
+Update artikel
+Set bestand -= @menge_tisch
+where bezeichnung = 'Tisch'
+select * from artikel
+rollback
+select * from artikel
+
+--25 Artiekl
+begin transaction 
+Select * from artikel
+Set XACT_ABORT on
+declare @menge_sessel2 int= 25
+declare @menge_tisch2 int= 25
+Update artikel
+Set bestand -= @menge_sessel2
+where bezeichnung = 'Sessel'
+Update artikel
+Set bestand -= @menge_tisch2
+where bezeichnung = 'Tisch'
+select * from artikel
+rollback
+select * from artikel
+
+
+--4. d)
+Begin Transaction T4d
+	Declare @menge_stuhl Int;
+	Set @menge_stuhl = 1000;
+	Declare @summe Int;
+	Update artikel set bestand += @menge_stuhl where bezeichnung ='stuhl'
+	Set @summe = (Select Sum(bestand) from artikel);
+	if(@summe > 2000)
+	  Begin
+		Print 'Artikel > 2000'
+		rollback
+	  End
+	else
+		commit
+
+Select Sum(bestand) from artikel
+Update artikel set bestand -= 500 where bezeichnung ='stuhl'
+
+--Aufgabe 5
+
+--5.
+-- T1 
+SET TRANSACTION ISOLATION LEVEL 
+repeatable read
+ 
+BEGIN TRANSACTION 
+-- r1(A) 
+SELECT aid,preis FROM Artikel 
+WHERE aid=111 
+ 
+waitfor delay '00:00:10' 
+ 
+--w1(B) 
+UPDATE Artikel set bestand=500 
+WHERE aid = 113 
+COMMIT 
+
+--a)
+--Hier entsteht kein Deadlock, da das Read uncommitted nur kurze x-Sperren verwendet und damit das lesen bzw schreiben nicht beeinflusst wird
+--b
+--Hier entsteht kein Deadlock, da das Read Committed nur Lange x-Sperren und kurze sSperren verwendet und da nach dem Schreiben kein lesen mehr stattfindet
+--c) 
+--Hier entsteht ein Deadlock, weil eine Lange S-Sperre den Schreibvorgang beider objekte verhindert
+
+--d) 
+-- T1 
+SET TRANSACTION ISOLATION LEVEL 
+repeatable read
+ 
+BEGIN TRANSACTION 
+-- r1(A) 
+SELECT aid,preis FROM Artikel 
+WHERE aid=111 
+Select aid,preis from Artikel
+Where aid=112
+SELECT aid,preis FROM Artikel 
+WHERE aid=113 
+Select aid,preis from Artikel
+Where aid=114
+ 
+waitfor delay '00:00:10' 
+ 
+--w1(B) 
+UPDATE Artikel set bestand=500 
+WHERE aid = 113
+UPDATE Artikel set bestand=20 
+WHERE aid = 115
+COMMIT 
+
+--e)
+-- T2
+SET TRANSACTION ISOLATION LEVEL
+repeatable read
+set DEADLOCK_PRIORITY  high
+BEGIN TRANSACTION
+-- r2(B)
+SELECT aid,bestand FROM Artikel
+WHERE aid = 113
+waitfor delay '00:00:10'
+-- w2(A)
+UPDATE Artikel set preis=350
+WHERE aid=111
+COMMIT
