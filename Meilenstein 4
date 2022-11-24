@@ -1,0 +1,41 @@
+--MEILENSTEIN 4 (Perspektive A) 
+--a) B hat sich stets bemüht, funktionierte nicht 
+--b) & c)
+CREATE USER s83815 FOR LOGIN [smb\s83815] WITH default_schema = extern
+CREATE SCHEMA extern AUTHORIZATION s83815 
+--d) B kann nun auf meine DB zugreifen 
+--e) B, hat nicht funktioniert (Use iw21s83794 Select * from Auftrag)
+--f)
+Grant select on Auftrag To s83815
+--g) B, funktioniert (Use iw21s83794 Select * from Auftrag)
+--h)
+sp_helprotect 
+--i) B (Begin Transaction Select * from Auftrag (holdlock) commit 
+--j)
+Select * from Auftrag
+Update Auftrag set MitID = 103 Where Aufnr = '5084'
+--stuck
+--k)
+sp_who
+--l) B (Begin Transaction Select * from Auftrag (holdlock) rollback
+--m)
+Update Auftrag set MitID = 103 Where Aufnr = '5084'
+--funktioniert
+--n) B, funktioniert nicht, da er nicht die Rechte dafür hat 
+--o)
+Grant delete on Auftrag to s83815
+--p) B konnte was löschen
+--q)
+Select * from Auftrag
+-- Auftrag 5084 fehlt plötzlich :((
+--r)
+Grant create table to s83815
+--s) B legt fleißig eine Tabelle an (Create table Auftrag (AuftragID primary key not null); Insert into Auftrag Values (5)
+--t)
+Select * from extern.Auftrag
+--funktioniert
+--u) Tabelle lies sich links finden, als extern.Auftrag 
+--v) B hat seine Tabelle gelöscht :) (Drop table extern.Auftrag)
+--w)
+Drop schema extern
+Drop user s83815
