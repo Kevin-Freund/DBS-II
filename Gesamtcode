@@ -1,4 +1,3 @@
-
 --Aufgabe 1.1 Tabellenerstellung
 CREATE TABLE Mitarbeiter (
 	MitID char(3) PRIMARY KEY Not Null,
@@ -721,3 +720,41 @@ Select * from extern.Auftrag
 --w)
 Drop schema extern
 Drop user s83815
+
+
+--MEILENSTEIN 5
+--Aufgabe 5
+SELECT * INTO auftrag2 FROM trommelhelden..quelleAuftrag2011
+SELECT * INTO montage2 FROM trommelhelden..quelleMontage2011
+--5.a) (Select, Skalarwert berechnen, Aggregate, Table Scan)
+SELECT COUNT(*) FROM auftrag2
+--5.c) (Select, Skalarwert berechnen, Aggregate, Clustered Index Scan)
+SELECT COUNT(*) FROM auftrag2
+
+--Aufgabe 6
+SELECT mitid, COUNT(*)
+FROM auftrag2
+WHERE anfahrt = 5 and AufDat BETWEEN '2011-01-01' AND '2011-09-01'
+GROUP BY mitid
+--6.a)
+-- sortierter (sort) Zugriff, USK Select: 1,11332
+--6.c)
+-- sortierter Zugriff führt zu einem Inner Join, und von da zu einem Index Seek sowie RID Lookup
+-- USK Select: 0,313524
+--6.d) USK Select und RID Lookup steigen, Sort Kosten und Index Seek sinken, ab August gleicht der Ablaufplan dem aus 6.a), sprich der Tabelle ohne Index
+--6.e)
+
+--Aufgabe 7
+--7.a) Ich nehme an, dass jeder Ablaufplan gleich ist, sprich Select, Inner Join und dann Table Scan (bzw. parallel Index Scan)
+--7.b) Annahme ist richtig
+
+--Aufgabe 8
+SELECT a.aufnr, erldat, k.kunort, SUM(anzahl * etpreis)
+FROM auftrag2 a
+ JOIN montage2 m ON a.aufnr = m.aufnr
+ JOIN ersatzteil e ON m.etid = e.etid
+ JOIN mitarbeiter ma ON a.mitid = ma.mitid
+ JOIN kunde k ON a.kunnr = k.kunnr
+GROUP BY a.aufnr, erldat, k.kunort
+--8.a) s. Anhang, USK Select: 3,49873
+--8.b) 
