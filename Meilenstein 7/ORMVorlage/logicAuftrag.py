@@ -51,6 +51,10 @@ def getAuftrag(p_mitnr):
     session.close()
 
 
+#Ausgabe Ersatzteile der Aufträge
+
+
+
 def anlegenAuftrag():
     """ Definition der Funktion anlegenAuftrag
     Die Funktion legt einen neuen Autrag an. Wenn es sich um einen neuen Kunden handelt,
