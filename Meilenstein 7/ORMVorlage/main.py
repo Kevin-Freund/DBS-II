@@ -1,6 +1,7 @@
 from checker import handleInputInteger
 from logicNiederlassung import getNiederlassung
 from logicMitarbeiter import getMitarbeiter
+from logicErsatzteil import getErsatzteil
 from logicAuftrag import getAuftrag, anlegenAuftrag, planenAuftrag
 
 # Aufruf der Ablauflogik
@@ -9,6 +10,7 @@ while True:
     print('1 - Daten anzeigen')
     print('2 - Neuen Auftrag anlegen')
     print('3 - Auftrag planen')
+    print('4 - Ersatzteile')
     wastun = handleInputInteger('Aktion wählen')
     print()
     
