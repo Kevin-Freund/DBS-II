@@ -32,6 +32,10 @@ while True:
     elif wastun == 3:
         print('Auftrag planen')
         planenAuftrag()
+
+    elif wastun == 4:
+        print('Ersatzteile')
+        getErsatzteil()   
     
     else:
         break

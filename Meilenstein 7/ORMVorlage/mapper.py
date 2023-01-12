@@ -88,6 +88,8 @@ class Auftrag(Base):
     Anfahrt          = Column('Anfahrt', Integer, nullable=True)
     Mitarbeiter = relationship('Mitarbeiter', back_populates="ListeAuftrag")
     Kunde       = relationship('Kunde', back_populates="ListeAuftrag")
+    ListeMontage = relationship("Montage", 
+                                    back_populates="Auftrag") 
  
     def __init__(self, kunnr, aufdat):
         """ Definition des Constructors der Klasse Auftrag.
@@ -106,5 +108,29 @@ class Auftrag(Base):
 
         self.KunNr = kunnr
         self.Auftragsdatum = aufdat
+
+
+class Ersatzteil(Base):
+    """ Definition der Klasse "Ersatzteil"
+    """
+    __tablename__ = 'Ersatzteil'
+    EtID            = Column('EtID', String(5), primary_key=True, autoincrement=False)
+    EtBezeichnung            = Column('EtBezeichnung', String(100))
+    EtPreis            = Column('EtPreis', Float)
+    EtAnzahl    = Column('EtAnzLager', Integer)
+    EtHersteller = Column('EtHersteller', String(30))
+    ListeMontage = relationship("Montage", 
+                                    back_populates="Ersatzteil") 
+
+
+class Montage(Base):
+
+    __tablename__ = 'Montage'
+    EtID            = Column('EtID', String(5), ForeignKey(Ersatzteil.EtID), primary_key=True, autoincrement=False)
+    AufNr            = Column('Aufnr', Integer, ForeignKey(Auftrag.AufNr), primary_key=True ,autoincrement=False)
+    Anzahl           = Column('Anzahl', Integer)
+    Ersatzteil = relationship('Ersatzteil', back_populates="ListeMontage")
+    Auftrag     = relationship('Auftrag', back_populates="ListeMontage")
+ 
 
 
