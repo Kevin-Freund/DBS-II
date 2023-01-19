@@ -28,7 +28,7 @@ def getMontage(p_aufnr):
         liste_mon = [0]    
         for mon in auftrag.ListeMontage:
             print(f' {mon.EtID} - {mon.Anzahl}')  # Ausgabe der Daten
-            liste_mon.append(int(mon.EtID))                     # Anhängen der Mitarbeiternummer an die Liste
+            # liste_mon.append(int(mon.EtID))                     # Anhängen der Mitarbeiternummer an die Liste
         print()
         
         # Absicherung, dass die eingegebene Mitarbeiternummer einem Mitarbeiter aus der Niederlassung entspricht
@@ -43,5 +43,7 @@ def getMontage(p_aufnr):
         print('Es gibt keine Mitarbeiter in dieser Niederlassung')
         eingabe_aufnr = 0
     session.close()
+
+
     return int(eingabe_aufnr)
 
