@@ -3,7 +3,7 @@ from logicNiederlassung import getNiederlassung
 from logicMitarbeiter import getMitarbeiter
 from logicErsatzteil import getErsatzteil
 from logicMontage import getMontage
-from logicAuftrag import getAuftrag, anlegenAuftrag, planenAuftrag
+from logicAuftrag import getAuftrag, anlegenAuftrag, planenAuftrag, ErledigungBuchen
 
 # Aufruf der Ablauflogik
 while True:
@@ -12,6 +12,7 @@ while True:
     print('2 - Neuen Auftrag anlegen')
     print('3 - Auftrag planen')
     print('4 - Ersatzteile')
+    print('5 - Erledigung buchen')
     wastun = handleInputInteger('Aktion wählen')
     print()
     
@@ -41,6 +42,10 @@ while True:
     elif wastun == 4:
         print('Ersatzteile')
         getErsatzteil()   
+
+    elif wastun == 5:
+        print('Planung buchen')
+        ErledigungBuchen()    
     
     else:
         break

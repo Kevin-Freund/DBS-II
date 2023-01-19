@@ -184,4 +184,55 @@ def planenAuftrag():
     else:
         print('Keine neuen Aufträge vorhanden\n')
     session.close()
-    
+
+def ErledigungBuchen():
+    """ Definition der Funktion planenAuftrag
+    Bei der Planung wird dem Auftrag ein Mitarbeiter und ein Erledigungsdatum zugewiesen.
+    """
+    session = sessionLoader()
+    # ungeplante Aufträge der letzten 20 Tage abfragen und ausgeben
+    heute = datetime.datetime.now()
+    abdatum = heute - datetime.timedelta(days=20)
+    menge_auftrag = session.query(Auftrag) \
+        .filter(Auftrag.Dauer == None, Auftrag.Anfahrt == None, Auftrag.Erledigungsdatum > abdatum, Auftrag.Erledigungsdatum <= heute) \
+        .order_by(Auftrag.Erledigungsdatum).all()
+    if len(menge_auftrag) > 0:
+        liste_aufnr = [0]  # Liste der angezeigten Auftragsnummern initialisieren
+        for auf in menge_auftrag:
+            print(f' {auf.AufNr} - {auf.Erledigungsdatum}; {auf.Kunde.Ort}')
+            liste_aufnr.append(auf.AufNr)  # Auftragsnummer zur Liste hinzufügen
+        
+        # Auftragsnummer eingeben lassen - muss in der erstellten Liste sein
+        eingabe_aufnr = -1
+        while eingabe_aufnr not in liste_aufnr:
+            eingabe_aufnr = handleInputInteger('Auftragsnummer')
+        if eingabe_aufnr != 0:
+            eingabe_dauer = handleInputInteger('Dauer')
+            print("")
+            eingabe_anfahrt = handleInputInteger('Anfahrt')
+            print("")
+            
+            # Auftragsobjekt-Objekt aus der Datenbank laden
+            auftrag = session.query(Auftrag).get(eingabe_aufnr)
+            # Abbruch, wenn der Auftrag nicht existiert
+            if isinstance(auftrag, type(None)): 
+               print(f'Auftrag {eingabe_aufnr} existiert nicht in der Datenbank.')  
+               session.close()
+               return
+            try:
+                # Update des Datensatzes mit der eingegebenen Auftragsnummer
+                auftrag.Dauer = eingabe_dauer
+                auftrag.Anfahrt = eingabe_anfahrt
+                session.commit()
+                # Abruf und Ausgabe des gerade geänderten Auftrages
+                auftragUpdated = session.query(Auftrag).get(eingabe_aufnr)
+                print(f' {auftragUpdated.AufNr} - Erledigung: {auftragUpdated.Erledigungsdatum}, {auftragUpdated.Dauer}, {auftragUpdated.Anfahrt}')
+            except exc.SQLAlchemyError():
+                print('Datenänderung nicht möglich.')
+        else:
+            print('Keine Auftragsnummer ausgewählt')
+            session.close()
+            return
+    else:
+        print('Keine neuen Aufträge vorhanden\n')
+ 
