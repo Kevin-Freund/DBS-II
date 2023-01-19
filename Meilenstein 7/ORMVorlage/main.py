@@ -2,7 +2,7 @@ from checker import handleInputInteger
 from logicNiederlassung import getNiederlassung
 from logicMitarbeiter import getMitarbeiter
 from logicErsatzteil import getErsatzteil
-from logicMonatge import getMontage
+from logicMontage import getMontage
 from logicAuftrag import getAuftrag, anlegenAuftrag, planenAuftrag
 
 # Aufruf der Ablauflogik

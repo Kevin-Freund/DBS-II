@@ -23,10 +23,10 @@ def getMontage(p_aufnr):
         session.close()
         return 0
     
-    if len(auftrag.ListeErsatzteile) > 0:
+    if len(Montage.ListeErsatzteile) > 0:
         # Definition der Liste für die Mitarbeiternummern aus der Niederlassung,  1. Element 0
         liste_mon = [0]    
-        for mon in auftrag.ListeErsatzteile:
+        for mon in Montage.ListeErsatzteile:
             print(f' {mon.EtID} - {mon.Anzahl}')  # Ausgabe der Daten
             liste_mon.append(int(mon.EtID))                     # Anhängen der Mitarbeiternummer an die Liste
         print()
