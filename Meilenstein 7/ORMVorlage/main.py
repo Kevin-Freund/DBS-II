@@ -2,6 +2,7 @@ from checker import handleInputInteger
 from logicNiederlassung import getNiederlassung
 from logicMitarbeiter import getMitarbeiter
 from logicErsatzteil import getErsatzteil
+from logicMonatge import getMontage
 from logicAuftrag import getAuftrag, anlegenAuftrag, planenAuftrag
 
 # Aufruf der Ablauflogik
@@ -21,8 +22,11 @@ while True:
             mitnr = getMitarbeiter(nlnr)     # Mitarbeiter aus Mitarbeiterliste auswählen
             while mitnr > 0:
                 print()
-                getAuftrag(mitnr)            # Aufträge des Mitarbeiters anzeigen
-                # mitnr = getMitarbeiter(nlnr) # neuen Mitarbeiter aus Mitarbeiterliste auswählen
+                aufnr = getAuftrag(mitnr)   # Aufträge des Mitarbeiters anzeigen
+                while aufnr > 0:
+                    print()
+                    getMontage(aufnr)                
+                mitnr = getMitarbeiter(nlnr) # neuen Mitarbeiter aus Mitarbeiterliste auswählen
             nlnr = getNiederlassung()        # neue Niederlassung aus Niederlassungsliste auswählen
 
     elif wastun == 2:
