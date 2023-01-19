@@ -26,7 +26,7 @@ while True:
                 while aufnr > 0:
                     print()
                     getMontage(aufnr)     
-                    aufnr = getAuftrag()           
+                    aufnr = getAuftrag(mitnr)           
                 mitnr = getMitarbeiter(nlnr) # neuen Mitarbeiter aus Mitarbeiterliste auswählen
             nlnr = getNiederlassung()        # neue Niederlassung aus Niederlassungsliste auswählen
 
