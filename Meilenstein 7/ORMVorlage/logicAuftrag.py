@@ -46,9 +46,20 @@ def getAuftrag(p_mitnr):
         # Falls keine Aufträge ausgegeben wurden (keine Aufträge in der kommenden Woche liegen)
         if anz_auftraege == 0:
             print('Der Mitarbeiter hat in dieser Zeit keine Aufträge')
-    print('-----------------------------------------------------------------')
-    print()
+        print('-----------------------------------------------------------------')
+        print()
+
+        # Eingabe der Auftragsnummer, wobei diese Eingabe solange wiederholt wird, bis eine gültige Auftragsnummer eingegeben wird
+        eingabe_aufnr = -1
+        while eingabe_aufnr not in [auf.AufNr for auf in mitarbeiter.ListeAuftrag]:
+                eingabe_aufnr = handleInputInteger('Auftragsnummer: ')
+        
+    else: 
+            print('Die eingegebene Auftragsnummer ist nicht gültig.')
+            eingabe_aufnr = 0
+
     session.close()
+    return eingabe_aufnr
 
 
 #Ausgabe Ersatzteile der Aufträge

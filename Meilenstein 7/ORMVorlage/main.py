@@ -22,7 +22,7 @@ while True:
             while mitnr > 0:
                 print()
                 getAuftrag(mitnr)            # Aufträge des Mitarbeiters anzeigen
-                mitnr = getMitarbeiter(nlnr) # neuen Mitarbeiter aus Mitarbeiterliste auswählen
+                # mitnr = getMitarbeiter(nlnr) # neuen Mitarbeiter aus Mitarbeiterliste auswählen
             nlnr = getNiederlassung()        # neue Niederlassung aus Niederlassungsliste auswählen
 
     elif wastun == 2:
