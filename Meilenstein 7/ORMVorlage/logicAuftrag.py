@@ -1,5 +1,5 @@
 from dbConnect import sessionLoader
-from mapper import Mitarbeiter, Auftrag, Kunde
+from mapper import Mitarbeiter, Auftrag, Kunde, Montage
 from checker import handleInputInteger, handleInputDatum
 import datetime
 from sqlalchemy import exc, or_
@@ -196,6 +196,7 @@ def ErledigungBuchen():
     menge_auftrag = session.query(Auftrag) \
         .filter(Auftrag.Dauer == None, Auftrag.Anfahrt == None, Auftrag.Erledigungsdatum > abdatum, Auftrag.Erledigungsdatum <= heute) \
         .order_by(Auftrag.Erledigungsdatum).all()
+
     if len(menge_auftrag) > 0:
         liste_aufnr = [0]  # Liste der angezeigten Auftragsnummern initialisieren
         for auf in menge_auftrag:
@@ -212,8 +213,10 @@ def ErledigungBuchen():
             eingabe_anfahrt = handleInputInteger('Anfahrt')
             print("")
             
+
             # Auftragsobjekt-Objekt aus der Datenbank laden
             auftrag = session.query(Auftrag).get(eingabe_aufnr)
+        
             # Abbruch, wenn der Auftrag nicht existiert
             if isinstance(auftrag, type(None)): 
                print(f'Auftrag {eingabe_aufnr} existiert nicht in der Datenbank.')  
@@ -223,12 +226,33 @@ def ErledigungBuchen():
                 # Update des Datensatzes mit der eingegebenen Auftragsnummer
                 auftrag.Dauer = eingabe_dauer
                 auftrag.Anfahrt = eingabe_anfahrt
+               # montage.EtId = eingabe_EtID
+               # montage.Anzahl = eingabe_Anzahl
                 session.commit()
                 # Abruf und Ausgabe des gerade geänderten Auftrages
                 auftragUpdated = session.query(Auftrag).get(eingabe_aufnr)
+                # Update Montage
                 print(f' {auftragUpdated.AufNr} - Erledigung: {auftragUpdated.Erledigungsdatum}, {auftragUpdated.Dauer}, {auftragUpdated.Anfahrt}')
+                session.close()
+              #  print(f' {montageUpdated.EtID} - {montageUpdated.Anzahl}')
+                  
             except exc.SQLAlchemyError():
                 print('Datenänderung nicht möglich.')
+            Fertig = -1
+            while Fertig == -1:
+                
+                eingabe_EtID = input('EtID: ')
+                print("")
+                if eingabe_EtID == '0':
+                    Fertig = 1      
+                else:
+                    eingabe_Anzahl = handleInputInteger('Anzahl')
+                    print("") 
+                    montageUpdated = Montage(EtID = eingabe_EtID, AufNr = eingabe_aufnr, Anzahl = eingabe_Anzahl)
+                    session.add(montageUpdated)
+                    session.commit()
+
+
         else:
             print('Keine Auftragsnummer ausgewählt')
             session.close()
