@@ -18,6 +18,10 @@ def handleInputInteger(prompttext):
             nr = int(inputstring)
     return nr
 
+
+
+
+
 def handleInputDatum(prompttext):
     """ Definition der Funktion handleInputDatum
     Die Funktion stellt sicher, dass es sich bei der eingegebenen Zeichenkette um
